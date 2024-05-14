@@ -1,30 +1,34 @@
 import express from "express";
-import { mapOrder } from "~/utils/sorts.js";
+import exitHook from "async-exit-hook";
+import { Connect_DB, Close_DB } from "./config/mongodb.js";
+import { env } from "./config/environment.js";
 
-const app = express();
+const Start_Server = () => {
+  const app = express();
 
-const hostname = "localhost";
-const port = 3000;
+  app.get("/", async (req, res) => {
+    res.end("<h1>Hello World!</h1><hr>");
+  });
 
-app.get("/", (req, res) => {
-  // Test Absolute import mapOrder
-  console.log(
-    mapOrder(
-      [
-        { id: "id-1", name: "One" },
-        { id: "id-2", name: "Two" },
-        { id: "id-3", name: "Three" },
-        { id: "id-4", name: "Four" },
-        { id: "id-5", name: "Five" },
-      ],
-      ["id-5", "id-4", "id-2", "id-3", "id-1"],
-      "id"
-    )
-  );
-  res.end("<h1>Hello World!</h1><hr>");
-});
+  app.listen(env.APP_PORT, env.APP_HOST, () => {
+    console.log(`I am running at ${env.APP_HOST}:${env.APP_PORT}`);
+  });
 
-app.listen(port, hostname, () => {
-  // eslint-disable-next-line no-console
-  console.log(`Hello Trung Quan Dev, I am running at ${hostname}:${port}/`);
-});
+  // clean up after stop server
+  // https://stackoverflow.com/questions/14031763/doing-a-cleanup-action-just-before-node-js-exits
+  exitHook(() => {
+    Close_DB();
+  });
+};
+
+// Immediately Invoked Function Expression (IIFE)
+(async () => {
+  try {
+    console.log("Connected to server");
+    await Connect_DB();
+    Start_Server();
+  } catch (error) {
+    console.error(error);
+    process.exit(0);
+  }
+})();
