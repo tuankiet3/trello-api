@@ -6,6 +6,8 @@ import { APIs_v1 } from "./routes/v1";
 const Start_Server = () => {
   const app = express();
 
+  app.use(express.json());
+
   app.use("/v1", APIs_v1);
 
   app.get("/", async (req, res) => {
